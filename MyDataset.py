@@ -4,10 +4,12 @@ import torch.utils.data as data
 import numpy as np
 
 class MyDataset(data.Dataset):
+    # borrow from previous homework
+
     def __init__(self, X, Y, offset=1, context=1):
 
         ### Add data and label to self (1-2 lines)
-        self.X = X
+        self.X = X            # X and Y are numpy array
         self.Y = Y
 
         ### Define data index mapping (4-6 lines)
@@ -39,10 +41,14 @@ class MyDataset(data.Dataset):
 
         ### Zero pad data as-needed for context size = 1 (1-2 lines)
         for i, x in enumerate(self.X):
+            a = X[0]
+            print(a.shape)
             self.X[i] = np.pad(x,
                                ((self.offset, offset), (0, 0)),
                                'constant',
                                constant_values=0)
+
+
 
     def __len__(self):
 
@@ -60,6 +66,8 @@ class MyDataset(data.Dataset):
         ## Calculate ending timestep using offset and context (1 line)
         end = j + self.offset + self.context + 1
 
+        assert start < end and self.X[i].size > 0
+
         ### Get data at index pair with context (1 line)
         x = self.X[i][start:end, :]
 
@@ -76,6 +84,15 @@ class MyDataset(data.Dataset):
 
         ### Select all labels from batch (1 line)
         batch_y = [y for x, y in batch]
+
+        # TODO: empty row?
+        for i in range(len(batch_x)):
+            if batch_x[i].size <= 0:
+                print(i)
+                a = batch_x[i]
+                raise AttributeError()
+                print("error!")
+
 
         ### Convert batched data and labels to tensors (2 lines)
         batch_x = torch.as_tensor(batch_x)
