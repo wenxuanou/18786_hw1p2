@@ -41,13 +41,14 @@ class MyDataset(data.Dataset):
 
         ### Zero pad data as-needed for context size = 1 (1-2 lines)
         for i, x in enumerate(self.X):
-            a = X[0]
+            a = self.X[i]
             print(a.shape)
             self.X[i] = np.pad(x,
-                               ((self.offset, offset), (0, 0)),
+                               ((self.offset, self.offset), (0, 0)),
                                'constant',
                                constant_values=0)
-
+            b = self.X[i]
+            print(a.shape)
 
 
     def __len__(self):
