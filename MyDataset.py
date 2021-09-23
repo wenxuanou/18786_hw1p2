@@ -9,8 +9,9 @@ class MyDataset(data.Dataset):
     def __init__(self, X, Y, offset=1, context=1):
 
         ### Add data and label to self (1-2 lines)
-        self.X = X            # X and Y are numpy array
-        self.Y = Y
+        self.X = X            # X: (datafile_num, (time_frame, frequency))
+        self.Y = Y            # Y: (datafile_num, (time_frame, ))
+
 
         ### Define data index mapping (4-6 lines)
         index_map_X = []
@@ -39,17 +40,18 @@ class MyDataset(data.Dataset):
         self.offset = offset
         self.context = context
 
-        ### Zero pad data as-needed for context size = 1 (1-2 lines)
+        ### Zero pad data for context
         for i, x in enumerate(self.X):
-            a = self.X[i]
-            print(a.shape)
             self.X[i] = np.pad(x,
-                               ((self.offset, self.offset), (0, 0)),
+                               ((self.context, self.context), (0, 0)),
                                'constant',
-                               constant_values=0)
-            b = self.X[i]
-            print(a.shape)
+                               constant_values=0)   # pad with zeros, x is 2D
 
+        ### Zero pad label
+        for i, y in enumerate(self.Y):
+            self.Y[i] = np.pad(y,
+                               (self.context, self.context),
+                               'reflect')       # pad with first and last label. y is 1D
 
     def __len__(self):
 
@@ -65,7 +67,7 @@ class MyDataset(data.Dataset):
         start = j + self.offset - self.context
 
         ## Calculate ending timestep using offset and context (1 line)
-        end = j + self.offset + self.context + 1
+        end = start + 2 * self.context + 1
 
         assert start < end and self.X[i].size > 0
 
@@ -80,19 +82,20 @@ class MyDataset(data.Dataset):
 
     def collate_fn(batch):
 
-        ### Select all data from batch (1 line)
-        batch_x = [x for x, y in batch]
+        batch_x = []
+        batch_y = []
+        for x, y in batch:
+            ### Select all data from batch (1 line)
+            batch_x += [x]
 
-        ### Select all labels from batch (1 line)
-        batch_y = [y for x, y in batch]
+            ### Select all labels from batch (1 line)
+            batch_y += [y]
 
-        # TODO: empty row?
-        for i in range(len(batch_x)):
-            if batch_x[i].size <= 0:
-                print(i)
-                a = batch_x[i]
-                raise AttributeError()
-                print("error!")
+        # TODO: why empty row?
+        # for i in range(len(batch_x)):
+        #     if batch_x[i].size <= 0:
+        #         print("empty batch_x!")
+        #         raise AttributeError()
 
 
         ### Convert batched data and labels to tensors (2 lines)

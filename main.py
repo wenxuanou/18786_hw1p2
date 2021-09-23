@@ -10,14 +10,11 @@ from tqdm import tqdm
 from MLP import MLP, weights_init
 from MyDataset import MyDataset
 
-def loadData(value_path, label_path, batch_size, offset, context, isTrain=True):
+def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
     # load from files
     values = np.load(value_path, allow_pickle=True)     # (1) -> (1458,40)
     labels = np.load(label_path, allow_pickle=True)     # (1) -> (1458, )
 
-    # TODO: debug
-    # a = values[0]   # (1458, 40)
-    # b = labels[0]   # (1458, )
 
     # TODO: preprocess data, scaling and standarization
 
@@ -25,7 +22,7 @@ def loadData(value_path, label_path, batch_size, offset, context, isTrain=True):
     dataset = MyDataset(values, labels, offset, context)
 
     dataloader = data.DataLoader(dataset,
-                                batch_size=batch_size,
+                                batch_size=Batch_size,
                                 shuffle=isTrain,
                                 collate_fn=MyDataset.collate_fn,
                                 drop_last=True)
@@ -45,12 +42,14 @@ if __name__ == "__main__":
     log_path = "log/"   # directory to save training checkpoint and log
 
     # parameters
-    Epoch = 200         # training epoch
-    Batch_size = 1024      # need to adjust
-    Input_dim = 40      # input feature dimension
-    Class_num = 71      # number of output class
-    Context = 5         # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
-    Offset = 0
+    Epoch = 10                 # training epoch, 200
+    Batch_size = 1024           # batch size, 1024
+    Input_dim = 40              # input feature dimension
+    Class_num = 71              # number of output class
+    Context = 2                 # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
+    Offset = Context            # offset of the first batch sample index with context
+
+    Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
 
     Lr = 1e-4              # learning rate (for Adam, SGD need bigger)
     MILESTONES = [150]  # schedulers milestone
@@ -59,10 +58,8 @@ if __name__ == "__main__":
 
     # load data
     testdata, testlabel, testloader = loadData(testdata_path, testlabel_path, Batch_size, Offset, Context, isTrain=False)
-    traindata, trainlabel, trainloader = loadData(traindata_path, trainlabel_path, Batch_size, Offset, Context, isTrain=False)   # TODO: set isTrain to True
+    traindata, trainlabel, trainloader = loadData(traindata_path, trainlabel_path, Batch_size, Offset, Context, isTrain=True)   # TODO: set isTrain to True
     valdata, vallabel, valloader = loadData(valdata_path, vallabe_path, Batch_size, Offset, Context, isTrain=True)
-
-    train_iterations = len(trainloader)  # get total batch iteration, for progress checking
 
     # check device available
     ngpu = 1  # number of gpu available
@@ -79,25 +76,29 @@ if __name__ == "__main__":
     sched = lr_scheduler.MultiStepLR(optimizer, milestones=MILESTONES)
 
     # loss function
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss()   # not require one hot label
 
     # training record
-    train_loss = []
-    val_loss = []
+    train_acc = []
+    val_acc = []
 
     # main training loop
     for epoch in range(Epoch):
         # record train loss
-        running_loss = 0.0
+        running_acc = 0.0
 
         # iterate batches
         for iter, data in enumerate(tqdm(trainloader)):
-            print("iter: " + str(iter) + " / " + str(len(trainloader)))
 
             values, labels = data
+            values = values.to(device).float()  # send to gpu, (batch_size, 2*context+1, in)
+            labels = labels.to(device).long()  # (batch_size, 1)
 
-            values = values.to(device).float()  # send to gpu
-            labels = labels.to(device).float()
+
+            if epoch == 9:
+                print("check")
+
+            values = torch.flatten(values, start_dim=1) # (batch, (2*context+1) * input_dim), flatten last 2 dimension
 
             optimizer.zero_grad()
             mlp.train()                 # set to train mode
@@ -108,14 +109,15 @@ if __name__ == "__main__":
             loss.backward()
             optimizer.step()
 
-            # print statistics
-            running_loss += loss.item()
+            # compute accuracy
+            preds = torch.argmax(preds, dim=1)
+            running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
 
 
 
-        running_loss = running_loss / train_iterations
-        print("Epoch: " + str(epoch) + " / " + str(Epoch) + " Train loss: " + str(running_loss))
-        train_loss.append(running_loss)
+        running_acc = running_acc / len(trainloader)
+        print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) + " Train loss: " + str(running_acc))
+        train_acc.append(running_acc)
 
         # update scheduler
         sched.step()
@@ -125,18 +127,19 @@ if __name__ == "__main__":
             running_loss = 0.0
             for iter, data in enumerate(tqdm(valloader)):
                 values, labels = data
-                values = values.to(device)
-                labels = labels.to(device)
+                values = values.to(device).float()
+                labels = labels.to(device).long()
 
                 mlp.eval()          # set to validation mode
                 preds = mlp.forward(values)
                 loss = criterion(preds, labels)
 
-                running_loss += loss.item()
+                preds = torch.argmax(preds, dim=1)
+                running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
 
-            running_loss = running_loss / len(valloader)
-            print("Epoch: " + str(epoch) + " / " + str(Epoch) + " Validation loss: " + str(running_loss))
-            val_loss.append(running_loss)
+            running_acc = running_loss / len(valloader)
+            print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) + " Validation loss: " + str(running_loss))
+            val_acc.append(running_loss)
 
 
 

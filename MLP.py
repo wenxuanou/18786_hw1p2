@@ -6,28 +6,26 @@ class MLP(nn.Module):
     def __init__(self, input_dim=40, class_num=71, context=1):
         super(MLP, self).__init__()
 
-        a = (2*context+1) * input_dim
-
+        # take in (batch, (2*context+1) * input_dim)
         self.mlp = nn.Sequential(
-            nn.Flatten(),               # (batch, (2*context+1) * input_dim), flatten to 2 dimension
-            nn.Linear(int((2*context+1) * input_dim), 1024),         # ((2*context+1) * input_dim, 1024)
-            nn.BatchNorm2d(1024),
+            nn.Linear(int((2*context+1) * input_dim), 1024),   # ((2*context+1) * input_dim, 1024)
+            nn.BatchNorm1d(1024),
             nn.ReLU(True),
             nn.Linear(1024, 512),          # (1024, 512)
-            nn.BatchNorm2d(512),
+            nn.BatchNorm1d(512),
             nn.ReLU(True),
             nn.Linear(512, 256),          # (512, 256)
-            nn.BatchNorm2d(256),
+            nn.BatchNorm1d(256),
             nn.ReLU(True),
             nn.Linear(256, 128),          # (256, 128)
-            nn.BatchNorm2d(128),
+            nn.BatchNorm1d(128),
             nn.ReLU(True),
             nn.Linear(128, class_num),    # (128,71)
-            nn.Sigmoid()
+            nn.Softmax(dim=1)
         )
 
     def forward(self, x):
-        y = self.mlp(x)
+        y = self.mlp(x)     # y: (batch, 71)
         return y
 
 # https://stackoverflow.com/questions/49433936/how-to-initialize-weights-in-pytorch
