@@ -6,8 +6,9 @@ class MLP(nn.Module):
     def __init__(self, input_dim=40, class_num=71, context=1):
         super(MLP, self).__init__()
 
-        # take in (batch, (2*context+1) * input_dim)
+        # take in (batch, (2*context+1), input_dim)
         self.mlp = nn.Sequential(
+            nn.Flatten(start_dim=1),        # flatten last 2 dimension, (batch, (2*context+1), input_dim)
             nn.Linear(int((2*context+1) * input_dim), 1024),   # ((2*context+1) * input_dim, 1024)
             nn.BatchNorm1d(1024),
             nn.ReLU(True),

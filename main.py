@@ -95,10 +95,8 @@ if __name__ == "__main__":
             labels = labels.to(device).long()  # (batch_size, 1)
 
 
-            if epoch == 9:
+            if values.shape[0] < Batch_size:
                 print("check")
-
-            values = torch.flatten(values, start_dim=1) # (batch, (2*context+1) * input_dim), flatten last 2 dimension
 
             optimizer.zero_grad()
             mlp.train()                 # set to train mode
@@ -116,7 +114,7 @@ if __name__ == "__main__":
 
 
         running_acc = running_acc / len(trainloader)
-        print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) + " Train loss: " + str(running_acc))
+        print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) + " Train acc: " + str(running_acc))
         train_acc.append(running_acc)
 
         # update scheduler
@@ -138,7 +136,7 @@ if __name__ == "__main__":
                 running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
 
             running_acc = running_loss / len(valloader)
-            print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) + " Validation loss: " + str(running_loss))
+            print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) + " Validation acc: " + str(running_loss))
             val_acc.append(running_loss)
 
 
