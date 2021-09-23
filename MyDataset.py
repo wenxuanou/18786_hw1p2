@@ -91,13 +91,6 @@ class MyDataset(data.Dataset):
             ### Select all labels from batch (1 line)
             batch_y += [y]
 
-        # TODO: why empty row?
-        # for i in range(len(batch_x)):
-        #     if batch_x[i].size <= 0:
-        #         print("empty batch_x!")
-        #         raise AttributeError()
-
-
         ### Convert batched data and labels to tensors (2 lines)
         batch_x = torch.as_tensor(batch_x)
         batch_y = torch.as_tensor(batch_y)

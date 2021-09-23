@@ -6,6 +6,7 @@ import torch.optim.lr_scheduler as lr_scheduler
 
 import numpy as np
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 from MLP import MLP, weights_init
 from MyDataset import MyDataset
@@ -32,8 +33,6 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
 if __name__ == "__main__":
     # data path
     # TODO: change to actual dataset name
-    testdata_path = "data/toy_test_data.npy"
-    testlabel_path = "data/toy_test_label.npy"      # test label may not be available
     traindata_path = "data/toy_train_data.npy"
     trainlabel_path = "data/toy_train_label.npy"
     valdata_path = "data/toy_val_data.npy"
@@ -42,7 +41,7 @@ if __name__ == "__main__":
     log_path = "log/"   # directory to save training checkpoint and log
 
     # parameters
-    Epoch = 10                 # training epoch, 200
+    Epoch = 5                 # training epoch, 200
     Batch_size = 1024           # batch size, 1024
     Input_dim = 40              # input feature dimension
     Class_num = 71              # number of output class
@@ -54,12 +53,11 @@ if __name__ == "__main__":
     Lr = 1e-4              # learning rate (for Adam, SGD need bigger)
     MILESTONES = [150]  # schedulers milestone
     MOMENTUM = 0.9      # when equals 0, no momentum
-    Val_period = 10     # validate every 10 epoch
+    Val_period = 2     # validate every 10 epoch
 
     # load data
-    testdata, testlabel, testloader = loadData(testdata_path, testlabel_path, Batch_size, Offset, Context, isTrain=False)
     traindata, trainlabel, trainloader = loadData(traindata_path, trainlabel_path, Batch_size, Offset, Context, isTrain=True)   # TODO: set isTrain to True
-    valdata, vallabel, valloader = loadData(valdata_path, vallabe_path, Batch_size, Offset, Context, isTrain=True)
+    valdata, vallabel, valloader = loadData(valdata_path, vallabe_path, Batch_size, Offset, Context, isTrain=False)
 
     # check device available
     ngpu = 1  # number of gpu available
@@ -94,10 +92,6 @@ if __name__ == "__main__":
             values = values.to(device).float()  # send to gpu, (batch_size, 2*context+1, in)
             labels = labels.to(device).long()  # (batch_size, 1)
 
-
-            if values.shape[0] < Batch_size:
-                print("check")
-
             optimizer.zero_grad()
             mlp.train()                 # set to train mode
 
@@ -111,8 +105,6 @@ if __name__ == "__main__":
             preds = torch.argmax(preds, dim=1)
             running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
 
-
-
         running_acc = running_acc / len(trainloader)
         print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) + " Train acc: " + str(running_acc))
         train_acc.append(running_acc)
@@ -120,9 +112,13 @@ if __name__ == "__main__":
         # update scheduler
         sched.step()
 
+
         # validate model
         if epoch % Val_period == Val_period - 1:
-            running_loss = 0.0
+            # validate every 10 epoch
+            running_acc = 0.0
+            trackLoss = None
+
             for iter, data in enumerate(tqdm(valloader)):
                 values, labels = data
                 values = values.to(device).float()
@@ -131,15 +127,42 @@ if __name__ == "__main__":
                 mlp.eval()          # set to validation mode
                 preds = mlp.forward(values)
                 loss = criterion(preds, labels)
+                trackLoss = loss
 
                 preds = torch.argmax(preds, dim=1)
                 running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
 
-            running_acc = running_loss / len(valloader)
-            print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) + " Validation acc: " + str(running_loss))
-            val_acc.append(running_loss)
+            running_acc = running_acc / len(valloader)
+            print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) + " Validation acc: " + str(running_acc))
+            val_acc.append(running_acc)
+
+            # save model
+            modelpath = "log/myMLP_epoch_" + str(epoch) + "_acc_" + str(running_acc) + ".pt"
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': mlp.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': trackLoss,
+            }, modelpath)
 
 
+    # save loss record
+    np.save("log/train_acc.npy", np.array(train_acc))
+    np.save("log/val_acc.npy", np.array(val_acc))
 
+    # plot loss
+    plt.figure(1)
+    plt.title("train acc")
+    plt.plot(train_acc)
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy %")
 
+    plt.savefig("train_acc.png")
 
+    plt.figure(2)
+    plt.title("validation acc")
+    plt.plot(val_acc)
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy %")
+
+    plt.savefig("validation_acc.png")
