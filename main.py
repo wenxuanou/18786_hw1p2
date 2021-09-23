@@ -33,37 +33,38 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
 if __name__ == "__main__":
     # data path
     # TODO: change to actual dataset name
-    traindata_path = "data/toy_train_data.npy"
-    trainlabel_path = "data/toy_train_label.npy"
-    valdata_path = "data/toy_val_data.npy"
-    vallabe_path = "data/toy_val_label.npy"
+    traindata_path = "data/train.npy"
+    trainlabel_path = "data/train_labels.npy"
+    valdata_path = "data/dev.npy"
+    vallabe_path = "data/dev_labels.npy"
 
     log_path = "log/"   # directory to save training checkpoint and log
 
     # parameters
-    Epoch = 5                 # training epoch, 200
-    Batch_size = 1024           # batch size, 1024
+    Epoch = 100                 # training epoch, 200
+    Batch_size = 2048           # batch size, 1024
     Input_dim = 40              # input feature dimension
     Class_num = 71              # number of output class
-    Context = 2                 # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
+    Context = 15                # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
     Offset = Context            # offset of the first batch sample index with context
 
     Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
 
     Lr = 1e-4              # learning rate (for Adam, SGD need bigger)
-    MILESTONES = [150]  # schedulers milestone
+    MILESTONES = [50]  # schedulers milestone
     MOMENTUM = 0.9      # when equals 0, no momentum
-    Val_period = 2     # validate every 10 epoch
-
-    # load data
-    traindata, trainlabel, trainloader = loadData(traindata_path, trainlabel_path, Batch_size, Offset, Context, isTrain=True)   # TODO: set isTrain to True
-    valdata, vallabel, valloader = loadData(valdata_path, vallabe_path, Batch_size, Offset, Context, isTrain=False)
+    Val_period = 10     # validate every 10 epoch
 
     # check device available
     ngpu = 1  # number of gpu available
     global device
     print("Using device: " + "cuda:0" if (torch.cuda.is_available()) else "cpu")
     device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
+    
+    # load data
+    print("loading data")
+    traindata, trainlabel, trainloader = loadData(traindata_path, trainlabel_path, Batch_size, Offset, Context, isTrain=True)
+    valdata, vallabel, valloader = loadData(valdata_path, vallabe_path, Batch_size, Offset, Context, isTrain=False)
 
     # initalize network
     mlp = MLP(input_dim=Input_dim, class_num=Class_num, context=Context).to(device)

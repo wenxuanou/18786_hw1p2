@@ -32,15 +32,15 @@ def loadTestData(value_path, Batch_size, offset, context, isTrain=True):
 
 if __name__ == "__main__":
     # data path
-    testdata_path = "data/toy_test_data.npy"
+    testdata_path = "data/test.npy"
     model_path = "log/myMLP_epoch_3_acc_0.16421473978136883.pt"
 
     # parameters
-    Epoch = 5  # training epoch, 200
-    Batch_size = 1024  # batch size, 1024
+#     Epoch = 5  # training epoch, 200
+    Batch_size = 2048  # batch size, 1024    # need to match main.py
     Input_dim = 40  # input feature dimension, 40
     Class_num = 71  # number of output class, 71
-    Context = 2  # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
+    Context = 15  # 5~30, extra data sampling around the interest point, make interval 2*context+1   #need to match main.py
     Offset = Context  # offset of the first batch sample index with context
 
     # load test data
