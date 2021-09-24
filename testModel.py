@@ -26,7 +26,7 @@ def loadTestData(value_path, Batch_size, offset, context, isTrain=True):
                                  shuffle=isTrain,
                                  collate_fn=MyDataset.collate_fn,
                                  pin_memory=True,
-                                 num_workers=8,
+                                 num_workers=2,         # up tp 16
                                  drop_last=True)
 
     return values, labels, dataloader
@@ -35,7 +35,7 @@ def loadTestData(value_path, Batch_size, offset, context, isTrain=True):
 if __name__ == "__main__":
     # data path
     testdata_path = "data/test.npy"
-    model_path = "log/myMLP_epoch_3_acc_0.16421473978136883.pt"
+    model_path = "log/myMLP_epoch_49.pt"
 
     # parameters
 #     Epoch = 5  # training epoch, 200

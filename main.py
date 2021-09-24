@@ -27,18 +27,22 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
                                 shuffle=isTrain,
                                 collate_fn=MyDataset.collate_fn,
                                 pin_memory=True,
-                                num_workers=8,
+                                num_workers=2,              # up to 16
                                 drop_last=True)
 
     return values, labels, dataloader
 
 if __name__ == "__main__":
     # data path
-    # TODO: change to actual dataset name
-    traindata_path = "data/train.npy"
-    trainlabel_path = "data/train_labels.npy"
-    valdata_path = "data/dev.npy"
-    vallabe_path = "data/dev_labels.npy"
+    # traindata_path = "data/train.npy"
+    # trainlabel_path = "data/train_labels.npy"
+    # valdata_path = "data/dev.npy"
+    # vallabe_path = "data/dev_labels.npy"
+
+    traindata_path = "data/toy_train_data.npy"
+    trainlabel_path = "data/toy_train_label.npy"
+    valdata_path = "data/toy_val_data.npy"
+    vallabe_path = "data/toy_val_label.npy"
 
     log_path = "log/"   # directory to save training checkpoint and log
 
@@ -87,6 +91,7 @@ if __name__ == "__main__":
     for epoch in range(Epoch):
         # record train loss
         running_acc = 0.0
+        print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch))
 
         # iterate batches
         for iter, data in enumerate(tqdm(trainloader)):
@@ -109,8 +114,7 @@ if __name__ == "__main__":
             running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
 
         running_acc = running_acc / len(trainloader)
-        print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) 
-              + " Train acc: " + str(running_acc * 100) + "%")
+        print("Train acc: " + str(running_acc * 100) + "%")
         train_acc.append(running_acc)
 
         # update scheduler
@@ -122,8 +126,8 @@ if __name__ == "__main__":
             # validate every 10 epoch
             running_acc = 0.0
             trackLoss = None
-
-            for iter, data in enumerate(tqdm(valloader)):
+            print("Validating")
+            for iter, data in enumerate(valloader):
                 values, labels = data
                 values = values.to(device).float()
                 labels = labels.to(device).long()
@@ -137,8 +141,7 @@ if __name__ == "__main__":
                 running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
 
             running_acc = running_acc / len(valloader)
-            print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch) 
-                  + " Validation acc: " + str(running_acc * 100) + "%")
+            print("Validation acc: " + str(running_acc * 100) + "%")
             val_acc.append(running_acc)
 
             # save model
