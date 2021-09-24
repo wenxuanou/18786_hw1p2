@@ -27,27 +27,27 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
                                 shuffle=isTrain,
                                 collate_fn=MyDataset.collate_fn,
                                 pin_memory=True,
-                                num_workers=2,              # up to 16
-                                drop_last=True)
+                                num_workers=16,              # up to 16
+                                drop_last=isTrain)
 
     return values, labels, dataloader
 
 if __name__ == "__main__":
     # data path
-    # traindata_path = "data/train.npy"
-    # trainlabel_path = "data/train_labels.npy"
-    # valdata_path = "data/dev.npy"
-    # vallabe_path = "data/dev_labels.npy"
+    traindata_path = "data/train.npy"
+    trainlabel_path = "data/train_labels.npy"
+    valdata_path = "data/dev.npy"
+    vallabe_path = "data/dev_labels.npy"
 
-    traindata_path = "data/toy_train_data.npy"
-    trainlabel_path = "data/toy_train_label.npy"
-    valdata_path = "data/toy_val_data.npy"
-    vallabe_path = "data/toy_val_label.npy"
+#     traindata_path = "data/toy_train_data.npy"
+#     trainlabel_path = "data/toy_train_label.npy"
+#     valdata_path = "data/toy_val_data.npy"
+#     vallabe_path = "data/toy_val_label.npy"
 
     log_path = "log/"   # directory to save training checkpoint and log
 
     # parameters
-    Epoch = 50                 # training epoch, 200
+    Epoch = 20                 # training epoch, 50
     Batch_size = 1024           # batch size, 1024
     Input_dim = 40              # input feature dimension
     Class_num = 71              # number of output class
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
 
     Lr = 1e-4              # learning rate (for Adam, SGD need bigger)
-    MILESTONES = [30]  # schedulers milestone
+    MILESTONES = [15]  # schedulers milestone, 30
     MOMENTUM = 0.9      # when equals 0, no momentum
     Val_period = 5     # validate every 10 epoch
 
@@ -114,7 +114,7 @@ if __name__ == "__main__":
             running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
 
         running_acc = running_acc / len(trainloader)
-        print("Train acc: " + str(running_acc * 100) + "%")
+        print("Train acc: " + str(running_acc * 100) + "%" + "Loss: " + str(loss.item()))
         train_acc.append(running_acc)
 
         # update scheduler
