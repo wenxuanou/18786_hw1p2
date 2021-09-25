@@ -56,9 +56,9 @@ if __name__ == "__main__":
 
     Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
 
-    Lr = 1e-5              # learning rate (for Adam, SGD need bigger), 1e-4
-    MILESTONES = [40]  # schedulers milestone, 30
-    MOMENTUM = 0.9      # when equals 0, no momentum
+    Lr = 1e-6              # learning rate (for Adam, SGD need bigger), 1e-4
+    MILESTONES = [20, 40]  # schedulers milestone, 30
+    MOMENTUM = 0.5      # when equals 0, no momentum, 0.9
     Val_period = 5     # validate every 10 epoch
 
     # check device available
