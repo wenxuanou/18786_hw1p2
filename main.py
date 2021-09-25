@@ -47,17 +47,17 @@ if __name__ == "__main__":
     log_path = "log/"   # directory to save training checkpoint and log
 
     # parameters
-    Epoch = 20                 # training epoch, 50
-    Batch_size = 1024           # batch size, 1024
+    Epoch = 50                 # training epoch, 50
+    Batch_size = 2048           # batch size, 1024
     Input_dim = 40              # input feature dimension
     Class_num = 71              # number of output class
-    Context = 15                # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
+    Context = 5                # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
     Offset = Context            # offset of the first batch sample index with context
 
     Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
 
-    Lr = 1e-4              # learning rate (for Adam, SGD need bigger)
-    MILESTONES = [15]  # schedulers milestone, 30
+    Lr = 1e-5              # learning rate (for Adam, SGD need bigger), 1e-4
+    MILESTONES = [40]  # schedulers milestone, 30
     MOMENTUM = 0.9      # when equals 0, no momentum
     Val_period = 5     # validate every 10 epoch
 
@@ -71,14 +71,14 @@ if __name__ == "__main__":
     print("loading data")
     traindata, trainlabel, trainloader = loadData(traindata_path, trainlabel_path, Batch_size, Offset, Context, isTrain=True)
     valdata, vallabel, valloader = loadData(valdata_path, vallabe_path, Batch_size, Offset, Context, isTrain=False)
-
+    
     # initalize network
     mlp = MLP(input_dim=Input_dim, class_num=Class_num, context=Context).to(device)
     mlp.apply(weights_init)
 
     # intialize optimizer and scheduler
     optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=MOMENTUM)
-    sched = lr_scheduler.MultiStepLR(optimizer, milestones=MILESTONES)
+    sched = lr_scheduler.MultiStepLR(optimizer, milestones=MILESTONES, gamma = 0.1)
 
     # loss function
     criterion = nn.CrossEntropyLoss()   # not require one hot label
@@ -92,7 +92,8 @@ if __name__ == "__main__":
         # record train loss
         running_acc = 0.0
         print("\nEpoch: " + str(epoch + 1) + " / " + str(Epoch))
-
+        mlp.train()                 # set to train mode
+        
         # iterate batches
         for iter, data in enumerate(tqdm(trainloader)):
 
@@ -100,21 +101,20 @@ if __name__ == "__main__":
             values = values.to(device).float()  # send to gpu, (batch_size, 2*context+1, in)
             labels = labels.to(device).long()  # (batch_size, 1)
 
-            optimizer.zero_grad()
-            mlp.train()                 # set to train mode
 
             preds = mlp.forward(values)
-
+            
+            optimizer.zero_grad()
             loss = criterion(preds, labels)
             loss.backward()
-            optimizer.step()
+            optimizer.step()                  # update optimizer
 
             # compute accuracy
             preds = torch.argmax(preds, dim=1)
             running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
 
         running_acc = running_acc / len(trainloader)
-        print("Train acc: " + str(running_acc * 100) + "%" + "Loss: " + str(loss.item()))
+        print("Train acc: " + str(running_acc * 100) + "%" + " Loss: " + str(loss.item()))
         train_acc.append(running_acc)
 
         # update scheduler
@@ -122,29 +122,30 @@ if __name__ == "__main__":
 
 
         # validate model
+        mlp.eval()          # set to validation mode
+#         if epoch % Val_period == Val_period - 1:
+        # validate every 10 epoch
+        running_acc = 0.0
+        trackLoss = None
+        print("Validating")
+        for iter, data in enumerate(valloader):
+            values, labels = data
+            values = values.to(device).float()
+            labels = labels.to(device).long()
+
+            preds = mlp.forward(values)
+            loss = criterion(preds, labels)
+            trackLoss = loss
+
+            preds = torch.argmax(preds, dim=1)
+            running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
+
+        running_acc = running_acc / len(valloader)
+        print("Validation acc: " + str(running_acc * 100) + "%" + " Loss: " + str(loss.item()))
+        val_acc.append(running_acc)
+
+        # save model
         if epoch % Val_period == Val_period - 1:
-            # validate every 10 epoch
-            running_acc = 0.0
-            trackLoss = None
-            print("Validating")
-            for iter, data in enumerate(valloader):
-                values, labels = data
-                values = values.to(device).float()
-                labels = labels.to(device).long()
-
-                mlp.eval()          # set to validation mode
-                preds = mlp.forward(values)
-                loss = criterion(preds, labels)
-                trackLoss = loss
-
-                preds = torch.argmax(preds, dim=1)
-                running_acc += (torch.sum(preds == labels) / Batch_size).cpu().item()
-
-            running_acc = running_acc / len(valloader)
-            print("Validation acc: " + str(running_acc * 100) + "%")
-            val_acc.append(running_acc)
-
-            # save model
             modelpath = "log/myMLP_epoch_" + str(epoch) + ".pt"
             torch.save({
                 'epoch': epoch,
