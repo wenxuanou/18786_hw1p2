@@ -18,6 +18,15 @@ class MLP(nn.Module):
             nn.Linear(int((2 * context + 1) * input_dim), int((2 * context + 1) * input_dim)),
             nn.BatchNorm1d(int((2 * context + 1) * input_dim)),
             nn.ReLU(True),
+            nn.Linear(int((2 * context + 1) * input_dim), int((2 * context + 1) * input_dim)),
+            nn.BatchNorm1d(int((2 * context + 1) * input_dim)),
+            nn.ReLU(True),
+            nn.Linear(int((2 * context + 1) * input_dim), int((2 * context + 1) * input_dim)),
+            nn.BatchNorm1d(int((2 * context + 1) * input_dim)),
+            nn.ReLU(True),
+            nn.Linear(int((2 * context + 1) * input_dim), int((2 * context + 1) * input_dim)),
+            nn.BatchNorm1d(int((2 * context + 1) * input_dim)),
+            nn.ReLU(True),
             
 #             nn.Linear(int((2*context+1) * input_dim), int((2*context+1) * input_dim / 20)),   # ((2*context+1) * input_dim, 1024)
 #             nn.BatchNorm1d(int((2*context+1) * input_dim / 20)),

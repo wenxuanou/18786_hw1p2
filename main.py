@@ -18,6 +18,11 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
 
 
     # TODO: preprocess data, scaling and standarization
+#     print("Preprocessing data")
+#     for i in range(values.shape[0]):
+#         values_min = np.min(values[i], axis=0)
+#         values_max = np.max(values[i], axis=0)
+#         values[i] = (values[i] - values_min[np.newaxis,:]) / (values_max - values_min)[np.newaxis,:]
 
     # create dataset
     dataset = MyDataset(values, labels, offset, context)
@@ -27,39 +32,39 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
                                 shuffle=isTrain,
                                 collate_fn=MyDataset.collate_fn,
                                 pin_memory=True,
-                                num_workers=2,              # up to 16
+                                num_workers=16,              # up to 16
                                 drop_last=isTrain)
 
     return values, labels, dataloader
 
 if __name__ == "__main__":
     # data path
-    # traindata_path = "data/train.npy"
-    # trainlabel_path = "data/train_labels.npy"
-    # valdata_path = "data/dev.npy"
-    # vallabe_path = "data/dev_labels.npy"
+    traindata_path = "data/train.npy"
+    trainlabel_path = "data/train_labels.npy"
+    valdata_path = "data/dev.npy"
+    vallabe_path = "data/dev_labels.npy"
 
-    traindata_path = "data/toy_train_data.npy"
-    trainlabel_path = "data/toy_train_label.npy"
-    valdata_path = "data/toy_val_data.npy"
-    vallabe_path = "data/toy_val_label.npy"
+#     traindata_path = "data/toy_train_data.npy"
+#     trainlabel_path = "data/toy_train_label.npy"
+#     valdata_path = "data/toy_val_data.npy"
+#     vallabe_path = "data/toy_val_label.npy"
 
     log_path = "log/"   # directory to save training checkpoint and log
 
     # parameters
-    Epoch = 50                 # training epoch, 50
+    Epoch = 20                 # training epoch, 50
     Batch_size = 2048           # batch size, 1024
     Input_dim = 40              # input feature dimension
     Class_num = 71              # number of output class
-    Context = 5                # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
+    Context = 10                # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
     Offset = Context            # offset of the first batch sample index with context
 
     Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
 
     Lr = 1e-5              # learning rate (for Adam, SGD need bigger), 1e-4
-    MILESTONES = [25, 40]  # schedulers milestone, 30
+    MILESTONES = [5, 10, 15]  # schedulers milestone, 30
     MOMENTUM = 0.9      # when equals 0, no momentum, 0.9
-    Gamma = 0.5         # lr decay rate for lr scheduler
+    Gamma = 0.1         # lr decay rate for lr scheduler
     Val_period = 5     # validate every 10 epoch
 
     # check device available
@@ -79,7 +84,7 @@ if __name__ == "__main__":
 
     # intialize optimizer and scheduler
     optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=MOMENTUM)
-    sched = lr_scheduler.MultiStepLR(optimizer, milestones=MILESTONES, gamma = Gamma)
+    sched = lr_scheduler.MultiStepLR(optimizer, milestones=MILESTONES, gamma=Gamma)
 
     # loss function
     criterion = nn.CrossEntropyLoss()   # not require one hot label

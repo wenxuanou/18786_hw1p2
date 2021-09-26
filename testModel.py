@@ -34,7 +34,7 @@ def loadTestData(value_path, Batch_size, offset, context, isTrain=True):
                                  shuffle=isTrain,
                                  collate_fn=MyDataset.collate_fn,
                                  pin_memory=True,
-                                 num_workers=2,         # up tp 16
+                                 num_workers=16,         # up tp 16
                                  drop_last=False)
 
     return values, labels, dataloader
@@ -47,10 +47,10 @@ if __name__ == "__main__":
 
     # parameters
 #     Epoch = 5  # training epoch, 200
-    Batch_size = 1024  # batch size, 1024    # need to match main.py
+    Batch_size = 2048  # batch size, 1024    # need to match main.py
     Input_dim = 40  # input feature dimension, 40
     Class_num = 71  # number of output class, 71
-    Context = 5  # 5~30, extra data sampling around the interest point, make interval 2*context+1   #need to match main.py
+    Context = 10  # 5~30, extra data sampling around the interest point, make interval 2*context+1   #need to match main.py
     Offset = Context  # offset of the first batch sample index with context
 
     # load test data
