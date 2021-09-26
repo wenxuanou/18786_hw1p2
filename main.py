@@ -18,11 +18,12 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
 
 
     # TODO: preprocess data, scaling and standarization
-#     print("Preprocessing data")
-#     for i in range(values.shape[0]):
-#         values_min = np.min(values[i], axis=0)
-#         values_max = np.max(values[i], axis=0)
-#         values[i] = (values[i] - values_min[np.newaxis,:]) / (values_max - values_min)[np.newaxis,:]
+    print("Preprocessing data")
+    # for i in range(values.shape[0]):
+    #     values_min = np.min(values[i], axis=0)
+    #     values_max = np.max(values[i], axis=0)
+    #     values[i] = (values[i] - values_min[np.newaxis,:]) / (values_max - values_min)[np.newaxis,:]
+    #     # print("check")
 
     # create dataset
     dataset = MyDataset(values, labels, offset, context)
@@ -32,22 +33,22 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
                                 shuffle=isTrain,
                                 collate_fn=MyDataset.collate_fn,
                                 pin_memory=True,
-                                num_workers=16,              # up to 16
+                                num_workers=2,              # up to 16
                                 drop_last=isTrain)
 
     return values, labels, dataloader
 
 if __name__ == "__main__":
     # data path
-    traindata_path = "data/train.npy"
-    trainlabel_path = "data/train_labels.npy"
-    valdata_path = "data/dev.npy"
-    vallabe_path = "data/dev_labels.npy"
+    # traindata_path = "data/train.npy"
+    # trainlabel_path = "data/train_labels.npy"
+    # valdata_path = "data/dev.npy"
+    # vallabe_path = "data/dev_labels.npy"
 
-#     traindata_path = "data/toy_train_data.npy"
-#     trainlabel_path = "data/toy_train_label.npy"
-#     valdata_path = "data/toy_val_data.npy"
-#     vallabe_path = "data/toy_val_label.npy"
+    traindata_path = "data/toy_train_data.npy"
+    trainlabel_path = "data/toy_train_label.npy"
+    valdata_path = "data/toy_val_data.npy"
+    vallabe_path = "data/toy_val_label.npy"
 
     log_path = "log/"   # directory to save training checkpoint and log
 
@@ -62,7 +63,7 @@ if __name__ == "__main__":
     Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
 
     Lr = 1e-5              # learning rate (for Adam, SGD need bigger), 1e-4
-    MILESTONES = [5, 10, 15]  # schedulers milestone, 30
+    MILESTONES = [10]  # schedulers milestone, 30
     MOMENTUM = 0.9      # when equals 0, no momentum, 0.9
     Gamma = 0.1         # lr decay rate for lr scheduler
     Val_period = 5     # validate every 10 epoch
@@ -154,7 +155,7 @@ if __name__ == "__main__":
 
         running_acc = running_acc / len(valloader)
         trackLoss = trackLoss / len(valloader)
-        print("Validation acc: " + str(running_acc * 100) + "%" + " Loss: " + str(loss.item()))
+        print("\nValidation acc: " + str(running_acc * 100) + "%" + " Loss: " + str(loss.item()))
         val_acc.append(running_acc * 100)
         val_loss.append(trackLoss)
 

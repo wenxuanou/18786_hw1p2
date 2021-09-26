@@ -15,7 +15,6 @@ def loadTestData(value_path, Batch_size, offset, context, isTrain=True):
     # load from files
     values = np.load(value_path, allow_pickle=True)  # (1) -> (1458,40)
     
-    w,h = values[0].shape
     labels = np.asarray([ np.zeros((values[i].shape[0],)) for i in range(values.shape[0])])  # fake label
     
 #     print("load in value shape: " + str(values.shape))
@@ -34,7 +33,7 @@ def loadTestData(value_path, Batch_size, offset, context, isTrain=True):
                                  shuffle=isTrain,
                                  collate_fn=MyDataset.collate_fn,
                                  pin_memory=True,
-                                 num_workers=16,         # up tp 16
+                                 num_workers=2,         # up tp 16
                                  drop_last=False)
 
     return values, labels, dataloader
@@ -50,7 +49,7 @@ if __name__ == "__main__":
     Batch_size = 2048  # batch size, 1024    # need to match main.py
     Input_dim = 40  # input feature dimension, 40
     Class_num = 71  # number of output class, 71
-    Context = 10  # 5~30, extra data sampling around the interest point, make interval 2*context+1   #need to match main.py
+    Context = 6  # 5~30, extra data sampling around the interest point, make interval 2*context+1   #need to match main.py
     Offset = Context  # offset of the first batch sample index with context
 
     # load test data
