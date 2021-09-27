@@ -10,20 +10,20 @@ class MLP(nn.Module):
         hidden_dim = int((2*context+1) * input_dim)
         self.mlp = nn.Sequential(
             nn.Flatten(start_dim=1),        # flatten last 2 dimension, (batch, (2*context+1), input_dim)
-            nn.Linear(hidden_dim, hidden_dim * 4),
-            nn.BatchNorm1d(hidden_dim * 4),
+            nn.Linear(hidden_dim, 4096),
+            nn.BatchNorm1d(4096),
             nn.ReLU(True),
-            nn.Linear(hidden_dim * 4, hidden_dim * 4),
-            nn.BatchNorm1d(hidden_dim * 4),
+            nn.Linear(4096, 4096),
+            nn.BatchNorm1d(4096),
             nn.ReLU(True),
-            nn.Linear(hidden_dim * 4, hidden_dim * 4),
-            nn.BatchNorm1d(hidden_dim * 4),
+            nn.Linear(4096, 4096),
+            nn.BatchNorm1d(4096),
             nn.ReLU(True),
-            nn.Linear(hidden_dim * 4, hidden_dim * 4),
-            nn.BatchNorm1d(hidden_dim * 4),
+            nn.Linear(4096, 4096),
+            nn.BatchNorm1d(4096),
             nn.ReLU(True),
-            nn.Linear(hidden_dim * 4, hidden_dim * 4),
-            nn.BatchNorm1d(hidden_dim * 4),
+            nn.Linear(4096, 4096),
+            nn.BatchNorm1d(4096),
             nn.ReLU(True),
             
 #             nn.Linear(int((2*context+1) * input_dim), int((2*context+1) * input_dim / 20)),   # ((2*context+1) * input_dim, 1024)
@@ -39,7 +39,7 @@ class MLP(nn.Module):
 #             nn.BatchNorm1d(128),
 #             nn.ReLU(True),
             
-            nn.Linear(hidden_dim * 4, class_num)    # (128,71)
+            nn.Linear(4096, class_num)    # (128,71)
             
             
 #             nn.Linear(128, class_num)    # (128,71)
