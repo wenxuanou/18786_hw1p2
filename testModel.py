@@ -33,7 +33,7 @@ def loadTestData(value_path, Batch_size, offset, context, isTrain=True):
                                  shuffle=isTrain,
                                  collate_fn=MyDataset.collate_fn,
                                  pin_memory=True,
-                                 num_workers=4,         # up tp 16
+                                 num_workers=6,         # up tp 16
                                  drop_last=False)
 
     return values, labels, dataloader

@@ -33,7 +33,7 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
                                 shuffle=isTrain,
                                 collate_fn=MyDataset.collate_fn,
                                 pin_memory=True,
-                                num_workers=4,              # up to 16
+                                num_workers=6,              # up to 16
                                 drop_last=isTrain)
 
     return values, labels, dataloader
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     # parameters
     Epoch = 20                 # training epoch, 50
-    Batch_size = 4096           # batch size, 1024
+    Batch_size = 2048           # batch size, 1024
     Input_dim = 40              # input feature dimension
     Class_num = 71              # number of output class
     Context = 10                # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
