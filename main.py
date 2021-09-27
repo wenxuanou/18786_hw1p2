@@ -33,7 +33,7 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
                                 shuffle=isTrain,
                                 collate_fn=MyDataset.collate_fn,
                                 pin_memory=True,
-                                num_workers=6,              # up to 16
+                                num_workers=8,              # up to 16
                                 drop_last=isTrain)
 
     return values, labels, dataloader
@@ -58,14 +58,17 @@ if __name__ == "__main__":
     Input_dim = 40              # input feature dimension
     Class_num = 71              # number of output class
     Context = 10                # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
+    #TODO: change to 15
+    
     Offset = Context            # offset of the first batch sample index with context
 
     Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
 
-    Lr = 1e-5              # learning rate (for Adam, SGD need bigger), 1e-4
-    MILESTONES = [5, 10, 15]  # schedulers milestone, 30
+    Lr = 1e-2              # learning rate (for Adam, SGD need bigger), 1e-4
+#     MILESTONES = [2, 5, 10, 15]  # schedulers milestone, 30
     MOMENTUM = 0.9      # when equals 0, no momentum, 0.9
-    Gamma = 0.1         # lr decay rate for lr scheduler
+#     Gamma = 0.1         # lr decay rate for lr scheduler
+    Factor = 0.1
     Val_period = 5     # validate every 10 epoch
 
     # check device available
@@ -84,9 +87,12 @@ if __name__ == "__main__":
     mlp.apply(weights_init)
 
     # intialize optimizer and scheduler
-    optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=MOMENTUM)
-    sched = lr_scheduler.MultiStepLR(optimizer, milestones=MILESTONES, gamma=Gamma)
-
+#     optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=MOMENTUM)
+    optimizer = torch.optim.SGD(mlp.parameters(), lr=Lr, momentum=MOMENTUM)
+    
+#     sched = lr_scheduler.MultiStepLR(optimizer, milestones=MILESTONES, gamma=Gamma)
+#     sched = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=Factor)
+    
     # loss function
     criterion = nn.CrossEntropyLoss()   # not require one hot label
 
@@ -131,7 +137,7 @@ if __name__ == "__main__":
         train_loss.append(trackLoss)
 
         # update scheduler
-        sched.step()
+#         sched.step()
 
 
         # validate model
@@ -158,7 +164,9 @@ if __name__ == "__main__":
         print("\nValidation acc: " + str(running_acc * 100) + "%" + " Loss: " + str(loss.item()))
         val_acc.append(running_acc * 100)
         val_loss.append(trackLoss)
-
+        
+#         sched.step(loss)
+        
         # save model
         if epoch % Val_period == Val_period - 1:
             modelpath = "log/myMLP_epoch_" + str(epoch) + ".pt"
