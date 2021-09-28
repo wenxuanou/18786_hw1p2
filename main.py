@@ -64,18 +64,24 @@ if __name__ == "__main__":
 
     Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
 
-    Lr = 1e-2              # learning rate (for Adam, SGD need bigger), 1e-4
+    Lr = 1e-3              # learning rate (for Adam, SGD need bigger), 1e-4
 #     MILESTONES = [2, 5, 10, 15]  # schedulers milestone, 30
     MOMENTUM = 0.9      # when equals 0, no momentum, 0.9
 #     Gamma = 0.1         # lr decay rate for lr scheduler
     Factor = 0.1
-    Val_period = 5     # validate every 10 epoch
+    Save_period = 5     # save every 5 epoch
 
     # check device available
     ngpu = 1  # number of gpu available
     global device
     print("Using device: " + "cuda:0" if (torch.cuda.is_available()) else "cpu")
     device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
+    
+    # activate half precision acc
+    if device == "cuda:0":
+        print("activate half precision")
+        scaler = torch.cuda.amp.GradScaler()
+    
     
     # load data
     print("loading data")
@@ -87,11 +93,11 @@ if __name__ == "__main__":
     mlp.apply(weights_init)
 
     # intialize optimizer and scheduler
-#     optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=MOMENTUM)
-    optimizer = torch.optim.SGD(mlp.parameters(), lr=Lr, momentum=MOMENTUM)
+    optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=MOMENTUM)
+#     optimizer = torch.optim.SGD(mlp.parameters(), lr=Lr, momentum=MOMENTUM)
     
 #     sched = lr_scheduler.MultiStepLR(optimizer, milestones=MILESTONES, gamma=Gamma)
-#     sched = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=Factor)
+    sched = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=Factor)
     
     # loss function
     criterion = nn.CrossEntropyLoss()   # not require one hot label
@@ -101,7 +107,8 @@ if __name__ == "__main__":
     train_loss = []
     val_acc = []
     val_loss = []
-
+    
+    
     # main training loop
     for epoch in range(Epoch):
         # record train loss
@@ -121,9 +128,18 @@ if __name__ == "__main__":
             preds = mlp.forward(values)
             
             optimizer.zero_grad()
-            loss = criterion(preds, labels)
-            loss.backward()
-            optimizer.step()                  # update optimizer
+            
+            if device == "cuda:0":
+                # activate half precision training
+                with torch.cuda.amp.autocast():
+                    loss = model(data)
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss = criterion(preds, labels)
+                loss.backward()
+                optimizer.step()                  # update optimizer
 
             # compute accuracy
             preds = torch.argmax(preds, dim=1)
@@ -142,8 +158,6 @@ if __name__ == "__main__":
 
         # validate model
         mlp.eval()          # set to validation mode
-#         if epoch % Val_period == Val_period - 1:
-        # validate every 10 epoch
         running_acc = 0.0
         trackLoss = 0.0
         print("Validating")
@@ -165,10 +179,11 @@ if __name__ == "__main__":
         val_acc.append(running_acc * 100)
         val_loss.append(trackLoss)
         
-#         sched.step(loss)
+        # ReduceLROnPlateau scheduler step
+        sched.step(loss)
         
         # save model
-        if epoch % Val_period == Val_period - 1:
+        if epoch % Save_period == Save_period - 1:
             modelpath = "log/myMLP_epoch_" + str(epoch) + ".pt"
             torch.save({
                 'epoch': epoch,
