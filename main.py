@@ -31,15 +31,15 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
 
 if __name__ == "__main__":
     # data path
-#     traindata_path = "data/train.npy"
-#     trainlabel_path = "data/train_labels.npy"
-#     valdata_path = "data/dev.npy"
-#     vallabe_path = "data/dev_labels.npy"
+    traindata_path = "data/train.npy"
+    trainlabel_path = "data/train_labels.npy"
+    valdata_path = "data/dev.npy"
+    vallabe_path = "data/dev_labels.npy"
 
-    traindata_path = "data/toy_train_data.npy"
-    trainlabel_path = "data/toy_train_label.npy"
-    valdata_path = "data/toy_val_data.npy"
-    vallabe_path = "data/toy_val_label.npy"
+#     traindata_path = "data/toy_train_data.npy"
+#     trainlabel_path = "data/toy_train_label.npy"
+#     valdata_path = "data/toy_val_data.npy"
+#     vallabe_path = "data/toy_val_label.npy"
 
     log_path = "log/"   # directory to save training checkpoint and log
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     mlp = MLP(input_dim=Input_dim, class_num=Class_num, context=Context).to(device)
     
     # intialize optimizer and scheduler
-    optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=MOMENTUM)
+    optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, momentum=MOMENTUM)
 #     optimizer = torch.optim.SGD(mlp.parameters(), lr=Lr, momentum=MOMENTUM)
     
     
