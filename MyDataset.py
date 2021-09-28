@@ -9,8 +9,8 @@ class MyDataset(data.Dataset):
     def __init__(self, X, Y, offset=1, context=1):
 
         ### Add data and label to self (1-2 lines)
-        self.X = X            # X: (datafile_num, (time_frame, frequency))
-        self.Y = Y            # Y: (datafile_num, (time_frame, ))
+        self.X = X
+        self.Y = Y
 
 
         ### Define data index mapping (4-6 lines)
@@ -46,13 +46,7 @@ class MyDataset(data.Dataset):
                                ((self.context, self.context), (0, 0)),
                                'constant',
                                constant_values=0)   # pad with zeros, x is 2D
-
-        ### Zero pad label
-        for i, y in enumerate(self.Y):
-            self.Y[i] = np.pad(y,
-                               (self.context, self.context),
-                               'reflect')       # pad with first and last label. y is 1D
-
+            
     def __len__(self):
 
         ### Return length (1 line)
