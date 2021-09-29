@@ -12,7 +12,6 @@ class MLP(nn.Module):
             nn.Flatten(start_dim=1),        # flatten last 2 dimension, (batch, (2*context+1), input_dim)
             nn.Linear(hidden_dim, 3240),
             nn.BatchNorm1d(3240),
-            nn.Dropout(p=0.5, inplace=True),
             nn.ReLU(True),
             nn.Linear(3240, 2048),
             nn.BatchNorm1d(2048),
