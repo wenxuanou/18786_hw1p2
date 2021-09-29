@@ -55,6 +55,7 @@ if __name__ == "__main__":
     Factor = 0.1
     Save_period = 5     # save every 5 epoch
     Weight_decay = 1e-4   # regularization
+    
     # check device available
     ngpu = 1  # number of gpu available
     global device
@@ -103,11 +104,9 @@ if __name__ == "__main__":
         for iter, data in enumerate(tqdm(trainloader)):
 
             values, labels = data
-#             values = values.to(device).float()  # send to gpu, (batch_size, 2*context+1, in)
-#             labels = labels.to(device).long()  # (batch_size, 1)
-            
-            values = values.to(device)
-            labels = labels.to(device)
+            values = values.to(device).float()  # send to gpu, (batch_size, 2*context+1, in)
+            labels = labels.to(device).long()  # (batch_size, 1)
+
 
             preds = mlp.forward(values)
             
@@ -141,26 +140,27 @@ if __name__ == "__main__":
         running_acc = 0.0
         trackLoss = 0.0
         print("Validating")
-        for iter, data in enumerate(valloader):
-            values, labels = data
-            values = values.to(device).float()
-            labels = labels.to(device).long()
+        with torch.no_grad():
+            for iter, data in enumerate(valloader):
+                values, labels = data
+                values = values.to(device).float()
+                labels = labels.to(device).long()
 
-            preds = mlp.forward(values)
-            loss = criterion(preds, labels)
+                preds = mlp.forward(values)
+                loss = criterion(preds, labels)
 
-            preds = torch.argmax(preds, dim=1)
-            running_acc += (torch.sum(1.0 * (preds == labels)) / Batch_size).cpu().item()
-            trackLoss += loss.item()
+                preds = torch.argmax(preds, dim=1)
+                running_acc += (torch.sum(1.0 * (preds == labels)) / Batch_size).cpu().item()
+                trackLoss += loss.item()
 
-        running_acc = running_acc / len(valloader)
-        trackLoss = trackLoss / len(valloader)
-        print("\nValidation acc: " + str(running_acc * 100) + "%" + " Loss: " + str(loss.item()))
-        val_acc.append(running_acc * 100)
-        val_loss.append(trackLoss)
+            running_acc = running_acc / len(valloader)
+            trackLoss = trackLoss / len(valloader)
+            print("\nValidation acc: " + str(running_acc * 100) + "%" + " Loss: " + str(loss.item()))
+            val_acc.append(running_acc * 100)
+            val_loss.append(trackLoss)
         
-        # ReduceLROnPlateau scheduler step
-        sched.step(loss)
+            # ReduceLROnPlateau scheduler step
+            sched.step(loss)
         
         # save model
         if epoch % Save_period == Save_period - 1:
