@@ -46,7 +46,13 @@ class MyDataset(data.Dataset):
                                ((self.context, self.context), (0, 0)),
                                'constant',
                                constant_values=0)   # pad with zeros, x is 2D
-
+            
+            self.X[i] = self.X[i].astype(np.float32)
+            
+        for i, y in enumerate(self.Y):
+            self.Y[i] = self.Y[i].astype(np.int64)
+            
+            
     def __len__(self):
 
         ### Return length (1 line)

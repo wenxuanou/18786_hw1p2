@@ -43,16 +43,13 @@ if __name__ == "__main__":
     Batch_size = 2048           # batch size, 1024
     Input_dim = 40              # input feature dimension
     Class_num = 71              # number of output class
-    Context = 10                # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
+    Context = 10                # 5~30, need validation, make interval 2*context+1
     
     Offset = Context            # offset of the first batch sample index with context
 
-    Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
-
     Lr = 1e-3              # learning rate (for Adam, SGD need bigger), 1e-4
-    MOMENTUM = 0.9      # when equals 0, no momentum, 0.9
     
-    Factor = 0.1
+    Factor = 0.5
     Save_period = 5     # save every 5 epoch
     Weight_decay = 1e-4   # regularization
     
@@ -102,10 +99,9 @@ if __name__ == "__main__":
         
         # iterate batches
         for iter, data in enumerate(tqdm(trainloader)):
-
             values, labels = data
-            values = values.to(device).float()  # send to gpu, (batch_size, 2*context+1, in)
-            labels = labels.to(device).long()  # (batch_size, 1)
+            values = values.to(device)  # send to gpu, (batch_size, 2*context+1, in)
+            labels = labels.to(device)  # (batch_size, 1)
 
 
             preds = mlp.forward(values)
@@ -115,7 +111,7 @@ if __name__ == "__main__":
             if device == "cuda:0":
                 # activate half precision training
                 with torch.cuda.amp.autocast():
-                    loss = model(data)
+                    loss = criterion(preds, labels)
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
@@ -143,8 +139,8 @@ if __name__ == "__main__":
         with torch.no_grad():
             for iter, data in enumerate(valloader):
                 values, labels = data
-                values = values.to(device).float()
-                labels = labels.to(device).long()
+                values = values.to(device)
+                labels = labels.to(device)
 
                 preds = mlp.forward(values)
                 loss = criterion(preds, labels)

@@ -16,14 +16,6 @@ def loadTestData(value_path, Batch_size, offset, context, isTrain=True):
     values = np.load(value_path, allow_pickle=True)  # (1) -> (1458,40)
     
     labels = np.asarray([ np.zeros((values[i].shape[0],)) for i in range(values.shape[0])])  # fake label
-    
-#     print("load in value shape: " + str(values.shape))
-#     print("values[0] shape: " + str(values[0].shape))
-#     print("load in labels shape: " + str(labels.shape))
-#     print("labels[0] shape: " + str(labels[0].shape))
-    
-    
-    # TODO: preprocess data, scaling and standarization
 
     # create dataset
     dataset = MyDataset(values, labels, offset, context)
@@ -45,13 +37,11 @@ if __name__ == "__main__":
     model_path = "log/myMLP_epoch_29.pt"
 
     # parameters
-#     Epoch = 5  # training epoch, 200
     Batch_size = 2048  # batch size, 1024    # need to match main.py
     Input_dim = 40  # input feature dimension, 40
     Class_num = 71  # number of output class, 71
-    Context = 10  # 5~30, extra data sampling around the interest point, make interval 2*context+1   #need to match main.py
-    #TODO: change to 15
-    
+    Context = 10  # 5~30, make interval 2*context+1   #need to match main.py
+
     Offset = Context  # offset of the first batch sample index with context
 
     # load test data
@@ -76,18 +66,17 @@ if __name__ == "__main__":
     # test model
     mlp.eval()
     result = np.array([])
-    for data in tqdm(testloader):
-        values,_ = data
-        values = values.to(device).float()
-        
-#         print("values shape: " + str(values.shape[1]*values.shape[2]) + ", " + str(values.shape))
-#         print("input dim: " + str((2*Context+1) * Input_dim))
-        assert values.shape[1]*values.shape[2] == int((2*Context+1) * Input_dim)
-        
-        preds = mlp.forward(values)
-        preds = torch.argmax(preds, dim=1)
-        preds = preds.data.cpu().numpy()
-        result = np.append(result, preds, axis=0)
+    with torch.no_grad():
+        for data in tqdm(testloader):
+            values,_ = data
+            values = values.to(device).float()
+
+            assert values.shape[1]*values.shape[2] == int((2*Context+1) * Input_dim)
+
+            preds = mlp.forward(values)
+            preds = torch.argmax(preds, dim=1)
+            preds = preds.data.cpu().numpy()
+            result = np.append(result, preds, axis=0)
     
     result = np.array([np.arange(0, result.shape[0]), result])
     result = result.T
