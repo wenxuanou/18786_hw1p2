@@ -16,15 +16,6 @@ def loadData(value_path, label_path, Batch_size, offset, context, isTrain=True):
     values = np.load(value_path, allow_pickle=True)     # (1) -> (1458,40)
     labels = np.load(label_path, allow_pickle=True)     # (1) -> (1458, )
 
-
-    # TODO: preprocess data, scaling and standarization
-#     print("Preprocessing data")
-    # for i in range(values.shape[0]):
-    #     values_min = np.min(values[i], axis=0)
-    #     values_max = np.max(values[i], axis=0)
-    #     values[i] = (values[i] - values_min[np.newaxis,:]) / (values_max - values_min)[np.newaxis,:]
-    #     # print("check")
-
     # create dataset
     dataset = MyDataset(values, labels, offset, context)
 
@@ -45,11 +36,6 @@ if __name__ == "__main__":
     valdata_path = "data/dev.npy"
     vallabe_path = "data/dev_labels.npy"
 
-#     traindata_path = "data/toy_train_data.npy"
-#     trainlabel_path = "data/toy_train_label.npy"
-#     valdata_path = "data/toy_val_data.npy"
-#     vallabe_path = "data/toy_val_label.npy"
-
     log_path = "log/"   # directory to save training checkpoint and log
 
     # parameters
@@ -58,19 +44,17 @@ if __name__ == "__main__":
     Input_dim = 40              # input feature dimension
     Class_num = 71              # number of output class
     Context = 10                # 5~30, need validation, extra data sampling around the interest point, make interval 2*context+1
-    #TODO: change to 15
     
     Offset = Context            # offset of the first batch sample index with context
 
     Samples_in_batch = Batch_size * (2 * Context + 1)    # actual number of samples in a batch
 
     Lr = 1e-3              # learning rate (for Adam, SGD need bigger), 1e-4
-#     MILESTONES = [2, 5, 10, 15]  # schedulers milestone, 30
     MOMENTUM = 0.9      # when equals 0, no momentum, 0.9
-#     Gamma = 0.1         # lr decay rate for lr scheduler
+    
     Factor = 0.1
     Save_period = 5     # save every 5 epoch
-
+    Weight_decay = 1e-4   # regularization
     # check device available
     ngpu = 1  # number of gpu available
     global device
@@ -93,10 +77,8 @@ if __name__ == "__main__":
     mlp.apply(weights_init)
 
     # intialize optimizer and scheduler
-    optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=MOMENTUM)
-#     optimizer = torch.optim.SGD(mlp.parameters(), lr=Lr, momentum=MOMENTUM)
+    optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=Weight_decay)
     
-#     sched = lr_scheduler.MultiStepLR(optimizer, milestones=MILESTONES, gamma=Gamma)
     sched = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=Factor)
     
     # loss function
@@ -121,9 +103,11 @@ if __name__ == "__main__":
         for iter, data in enumerate(tqdm(trainloader)):
 
             values, labels = data
-            values = values.to(device).float()  # send to gpu, (batch_size, 2*context+1, in)
-            labels = labels.to(device).long()  # (batch_size, 1)
-
+#             values = values.to(device).float()  # send to gpu, (batch_size, 2*context+1, in)
+#             labels = labels.to(device).long()  # (batch_size, 1)
+            
+            values = values.to(device)
+            labels = labels.to(device)
 
             preds = mlp.forward(values)
             
@@ -151,10 +135,6 @@ if __name__ == "__main__":
         print("Train acc: " + str(running_acc * 100) + "%" + " Loss: " + str(loss.item()))
         train_acc.append(running_acc * 100)
         train_loss.append(trackLoss)
-
-        # update scheduler
-#         sched.step()
-
 
         # validate model
         mlp.eval()          # set to validation mode
@@ -198,20 +178,3 @@ if __name__ == "__main__":
     np.save("log/train_loss.npy", np.array(train_loss))
     np.save("log/val_acc.npy", np.array(val_acc))
     np.save("log/val_loss.npy", np.array(val_loss))
-
-    # plot loss
-    plt.figure(1)
-    plt.title("train acc")
-    plt.plot(train_acc)
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy %")
-
-    plt.savefig("train_acc.png")
-
-    plt.figure(2)
-    plt.title("validation acc")
-    plt.plot(val_acc)
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy %")
-
-    plt.savefig("validation_acc.png")

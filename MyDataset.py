@@ -9,8 +9,8 @@ class MyDataset(data.Dataset):
     def __init__(self, X, Y, offset=1, context=1):
 
         ### Add data and label to self (1-2 lines)
-        self.X = X            # X: (datafile_num, (time_frame, frequency))
-        self.Y = Y            # Y: (datafile_num, (time_frame, ))
+        self.X = X.astype(float)            # X: (datafile_num, (time_frame, frequency))
+        self.Y = Y.astype(long)            # Y: (datafile_num, (time_frame, ))
 
 
         ### Define data index mapping (4-6 lines)
