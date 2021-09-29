@@ -10,9 +10,7 @@ class MLP(nn.Module):
         hidden_dim = int((2*context+1) * input_dim)
         self.mlp = nn.Sequential(
             nn.Flatten(start_dim=1),        # flatten last 2 dimension, (batch, (2*context+1), input_dim)
-            
-            nn.Linear(size[1], size[2])
-            
+                        
             nn.Linear(hidden_dim, 3240),
             nn.BatchNorm1d(3240),
             nn.Dropout(p=0.5, inplace=True),

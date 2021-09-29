@@ -56,6 +56,7 @@ if __name__ == "__main__":
 
     Lr = 1e-5              # learning rate (for Adam, SGD need bigger), 1e-4
     MOMENTUM = 0.9      # when equals 0, no momentum, 0.9
+    Weight_decay = 1e-4    # regularization parameter
     Save_period = 5     # save every 5 epoch
 
     # check device available
@@ -73,7 +74,7 @@ if __name__ == "__main__":
     mlp = MLP(input_dim=Input_dim, class_num=Class_num, context=Context).to(device)
     
     # intialize optimizer and scheduler
-    optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, momentum=MOMENTUM)
+    optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=Weight_decay)
 #     optimizer = torch.optim.SGD(mlp.parameters(), lr=Lr, momentum=MOMENTUM)
     
     
