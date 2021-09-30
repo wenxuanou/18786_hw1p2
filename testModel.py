@@ -34,13 +34,13 @@ def loadTestData(value_path, Batch_size, offset, context, isTrain=True):
 if __name__ == "__main__":
     # data path
     testdata_path = "data/test.npy"
-    model_path = "log/myMLP_epoch_29.pt"
+    model_path = "log/myMLP_epoch_19.pt"
 
     # parameters
     Batch_size = 2048  # batch size, 1024    # need to match main.py
     Input_dim = 40  # input feature dimension, 40
     Class_num = 71  # number of output class, 71
-    Context = 10  # 5~30, make interval 2*context+1   #need to match main.py
+    Context = 20  # 5~30, make interval 2*context+1   #need to match main.py
 
     Offset = Context  # offset of the first batch sample index with context
 
@@ -59,9 +59,6 @@ if __name__ == "__main__":
     # load model
     checkpoint = torch.load(model_path)
     mlp.load_state_dict(checkpoint['model_state_dict'])
-    # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    # epoch = checkpoint['epoch']
-    # loss = checkpoint['loss']
 
     # test model
     mlp.eval()

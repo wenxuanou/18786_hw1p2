@@ -11,14 +11,20 @@ class MLP(nn.Module):
         self.mlp = nn.Sequential(
             nn.Flatten(start_dim=1),        # flatten last 2 dimension, (batch, (2*context+1), input_dim)
             
-            nn.Linear(hidden_dim, 3240),
-            nn.BatchNorm1d(3240),
+            nn.Linear(hidden_dim, 2048),
+            nn.BatchNorm1d(2048),
             nn.ReLU(True),
-            nn.Linear(3240, 2048),
+            nn.Linear(2048, 2048),
             nn.BatchNorm1d(2048),
             nn.Dropout(p=0.5, inplace=True),
             nn.ReLU(True),
             nn.Linear(2048, 1024),
+            nn.BatchNorm1d(1024),
+            nn.ReLU(True),
+            nn.Linear(1024, 1024),
+            nn.BatchNorm1d(1024),
+            nn.ReLU(True),
+            nn.Linear(1024, 1024),
             nn.BatchNorm1d(1024),
             nn.Dropout(p=0.5, inplace=True),
             nn.ReLU(True),

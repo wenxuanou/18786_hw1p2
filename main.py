@@ -39,19 +39,19 @@ if __name__ == "__main__":
     log_path = "log/"   # directory to save training checkpoint and log
 
     # parameters
-    Epoch = 20                 # training epoch, 50
+    Epoch = 30                 # training epoch, 50
     Batch_size = 2048           # batch size, 1024
     Input_dim = 40              # input feature dimension
     Class_num = 71              # number of output class
-    Context = 10                # 5~30, need validation, make interval 2*context+1
+    Context = 20                # 5~30, need validation, make interval 2*context+1
     
     Offset = Context            # offset of the first batch sample index with context
 
     Lr = 1e-3              # learning rate (for Adam, SGD need bigger), 1e-4
     
-    Factor = 0.5
+    Factor = 0.1
     Save_period = 5     # save every 5 epoch
-    Weight_decay = 1e-4   # regularization
+    Weight_decay = 1e-6   # regularization, 1e-4
     
     # check device available
     ngpu = 1  # number of gpu available
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # intialize optimizer and scheduler
     optimizer = torch.optim.Adam(params=mlp.parameters(), lr=Lr, weight_decay=Weight_decay)
     
-    sched = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=Factor)
+    sched = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=Factor, verbose=True)
     
     # loss function
     criterion = nn.CrossEntropyLoss()   # not require one hot label
