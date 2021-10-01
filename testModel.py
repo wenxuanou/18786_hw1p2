@@ -34,7 +34,7 @@ def loadTestData(value_path, Batch_size, offset, context, isTrain=True):
 if __name__ == "__main__":
     # data path
     testdata_path = "data/test.npy"
-    model_path = "log/myMLP_epoch_19.pt"
+    model_path = "log/myMLP_epoch_14.pt"
 
     # parameters
     Batch_size = 2048  # batch size, 1024    # need to match main.py
