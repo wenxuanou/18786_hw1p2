@@ -34,14 +34,23 @@ MyDataset.py: function to load and construct dataset from file.
 ## Training parameter used
 
 Epoch = 30                  # training epoch
+
 Batch_size = 2048           # batch size
+
 Input_dim = 40              # input feature dimension
+
 Class_num = 71              # number of output class
+
 Context = 20                # data sample context
+
 Offset = Context            # offset of the first batch sample index with context
+
 Lr = 1e-3                   # learning rate
+
 Factor = 0.1                # ReduceLROnPlateau scheduler decay factor
+
 Save_period = 5             # save model every 5 epoch
+
 Weight_decay = 1e-6         # Adam regularization
 
 Best accuracy: 0.7895
