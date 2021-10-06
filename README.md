@@ -1,6 +1,6 @@
 # 18786_hw1p2
 
-## Packeages used
+## Packages used
 
 pytorch: For dataset and model training.
 
